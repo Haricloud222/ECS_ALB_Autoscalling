@@ -1,0 +1,67 @@
+ECS + ALB + Auto Scaling Lab
+
+>>>>>>>>>>>>>>>>>>Create ECS Cluster
+
+Fargate
+harish-httpd-cluster
+
+>>>>>>>>>>>>>>>>>>>>>Create Task Definition
+
+Image: httpd:latest
+Port: 80
+CPU: 0.25 vCPU
+Memory: 0.5 GB
+
+>>>>>>>>>>>>>>>>>>>>>>>>Create ALB
+
+Internet-facing
+Listener: HTTP:80
+Security Group: allow 80
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>Create Target Group
+
+Target type: IP because we're using Fargate
+Protocol: HTTP
+Port: 80
+Health check: /
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>Create ECS Service
+
+Service: httpd-alb-service
+Fargate
+Connect existing ALB
+Connect target group
+
+>>>>>>>>>>>>>>>>>>>>Verify
+
+ECS Task → RUNNING
+Target Group → Healthy
+Open ALB DNS → Apache “It works!”
+
+<<<<<<<<<<<<<<<<<<<<Manual Scaling
+
+Plain Text
+Desired tasks: 1 → 3
+
+ECS created multiple Fargate tasks.
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>Auto Scaling
+
+Plain Text
+Minimum: 1
+Maximum: 4
+CPU target: 50%
+Policy: httpd-cpu-autoscaling
+Architecture
+
+Internet → ALB → Target Group → ECS Service → Fargate Tasks
+
+>>>>>>>>>>>>>>>>>>>>>Important troubleshooting
+
+If target is Unhealthy / Request timed out:
+
+Check container port 80
+Check ECS task Security Group
+Allow port 80 from the ALB Security Group
+For Fargate, Target Group type should be IP
+Check health path /
